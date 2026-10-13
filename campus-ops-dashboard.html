@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northgate University Infrastructure Operations</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="loader"><div class="lb"><i></i><i></i><i></i><i></i><i></i></div><p>Connecting to infrastructure</p></div>
+
+<div class="app">
+<aside id="side">
+  <div class="brand">Northgate<small>Infrastructure operations</small></div>
+  <nav id="nav">
+    <button data-go="dashboard">Dashboard</button>
+    <button data-go="monitoring">Monitoring</button>
+    <button data-go="backups">Backups</button>
+    <button data-go="recovery">Recovery</button>
+    <button data-go="alerts">Alerts <span class="cnt" id="navAlerts">0</span></button>
+    <button data-go="settings">Settings</button>
+  </nav>
+  <div class="side-foot">Northgate University IT Services<br>Data centre B, Block 4</div>
+</aside>
+
+<main>
+<header class="top">
+  <div style="display:flex;gap:12px;align-items:center"><button class="btn sm" id="menu">Menu</button><h1 id="title"></h1></div>
+  <div class="tr"><span id="clock"></span><button class="btn sm" id="theme">Dark mode</button></div>
+</header>
+
+<!-- Dashboard -->
+<section class="page" data-page="dashboard">
+  <h2 class="hero" id="hero"></h2>
+  <p class="lede"><span class="live"></span>Live. Charts refresh every four seconds with simulated readings from the primary data centre.</p>
+  <div class="stats">
+    <div class="stat"><p>Servers online</p><b id="sOnline">47/48</b><span>1 in maintenance</span></div>
+    <div class="stat"><p>Databases</p><b>12</b><span>9 PostgreSQL, 3 Oracle</span></div>
+    <div class="stat"><p>Storage used</p><b>68%</b><span>408 of 600 TB</span></div>
+    <div class="stat"><p>Last backup</p><b id="sLast">02:14</b><span id="sLastSub">Student records, today</span></div>
+    <div class="stat"><p>Active alerts</p><b id="sAlerts">0</b><span id="sAlertsSub"></span></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="hd"><h2>Processor load</h2><b id="vcpu"></b></div><canvas id="c-cpu"></canvas></div>
+    <div class="card"><div class="hd"><h2>Memory</h2><b id="vmem"></b></div><canvas id="c-mem"></canvas></div>
+    <div class="card"><div class="hd"><h2>Network <br>Throughput</br></h2><b id="vnet"></b></div><canvas id="c-net"></canvas></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="hd"><h2>Recent activity</h2></div><ul class="feed" id="feed"></ul></div>
+    <div class="card"><div class="hd"><h2>Storage by system</h2></div><div id="vols"></div></div>
+  </div>
+</section>
+
+<!-- Monitoring -->
+<section class="page" data-page="monitoring" hidden>
+  <div class="row"><div class="sec"><h2>University services</h2><p id="monSum"></p></div></div>
+  <div class="scroll"><table><thead><tr><th>Service</th><th>Host</th><th>Status</th><th>Uptime, 90 days</th><th>Latency</th><th>Last check</th></tr></thead><tbody id="svc"></tbody></table></div>
+</section>
+
+<!-- Backups -->
+<section class="page" data-page="backups" hidden>
+  <div class="row"><div class="sec"><h2>Backup jobs</h2><p>Seven jobs protect 3.0 TB of production data.</p></div><button class="btn solid" id="runBk">Run backup now</button></div>
+  <div class="scroll"><table><thead><tr><th>Job</th><th>Mode</th><th>Schedule</th><th>Size</th><th>Progress</th><th>Last run</th><th>Result</th></tr></thead><tbody id="jobs"></tbody></table></div>
+</section>
+
+<!-- Recovery -->
+<section class="page" data-page="recovery" hidden>
+  <div class="row"><div class="sec"><h2>Restore a system</h2><p>Choose what to restore and the point in time to restore it to.</p></div></div>
+  <div class="form" id="rform">
+    <label class="f"><span>System</span><select id="rs"></select></label>
+    <label class="f"><span>Restore point</span><select id="rp"></select></label>
+    <div class="full"><span style="display:block;margin-bottom:6px;color:var(--mute)">Destination</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="mode" value="sandbox" checked><div>Isolated sandbox<small>Live data stays untouched. Use this to check a restore first.</small></div></label>
+        <label class="opt"><input type="radio" name="mode" value="place"><div>Restore in place<small>Overwrites live data and restarts the service.</small></div></label>
+      </div></div>
+    <div class="full"><button class="btn solid" id="rgo">Initiate recovery</button></div>
+  </div>
+  <div class="card" id="rprog" style="margin-top:28px;max-width:760px" hidden>
+    <div class="hd"><h2 id="rtitle"></h2><b id="rpct">0%</b></div>
+    <div class="bar"><i id="rbar" style="width:0"></i></div>
+    <ul class="steps" id="rsteps"></ul>
+  </div>
+  <h2 style="margin:40px 0 14px;font-size:16px;font-weight:500">Recovery history</h2>
+  <div class="scroll" style="max-width:760px"><table><thead><tr><th>System</th><th>Restore point</th><th>Destination</th><th>When</th></tr></thead><tbody id="rhist"></tbody></table></div>
+</section>
+
+<!-- Alerts -->
+<section class="page" data-page="alerts" hidden>
+  <div class="row"><div class="sec"><h2>Alerts</h2><p>Acknowledge an alert once someone owns it.</p></div></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="panelbox" id="alerts"></div>
+</section>
+
+<!-- Settings -->
+<section class="page" data-page="settings" hidden>
+  <div class="row"><div class="sec"><h2>Settings</h2><p>Applies to all monitored systems.</p></div></div>
+  <div class="panelbox" style="max-width:760px">
+    <div class="setrow"><div><b style="font-weight:500">Email notifications</b><p>Send warnings and critical alerts to itops@northgate.edu.</p></div><input class="sw" type="checkbox" checked></div>
+    <div class="setrow"><div><b style="font-weight:500">Text message for critical alerts</b><p>Reaches the on-call engineer.</p></div><input class="sw" type="checkbox" checked></div>
+    <div class="setrow"><div><b style="font-weight:500">Retry failed backups</b><p>Up to three attempts, 15 minutes apart.</p></div><input class="sw" type="checkbox" checked></div>
+    <div class="setrow"><div><b style="font-weight:500">Backup retention</b><p>How long restore points are kept.</p></div><select><option>14 days</option><option selected>30 days</option><option>90 days</option><option>1 year</option></select></div>
+    <div class="setrow"><div><b style="font-weight:500">Nightly backup window</b><p>Start of the low-traffic window.</p></div><input type="time" value="01:00"></div>
+  </div>
+  <button class="btn solid" style="margin-top:20px" id="save">Save changes</button>
+</section>
+</main>
+</div>
+
+<dialog id="dlg"><h2>Confirm recovery</h2><p id="dmsg"></p><div class="acts"><button class="btn" id="dno">Cancel</button><button class="btn solid" id="dyes">Start recovery</button></div></dialog>
+<div id="toast"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const hhmm=()=>new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+const bd=(t,c='')=>`<span class="b ${c}">${t}</span>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600)}
+
+/* theme */
+function setTheme(t){document.documentElement.dataset.theme=t;$('#theme').textContent=t==='dark'?'Light mode':'Dark mode';try{localStorage.setItem('ngt',t)}catch(e){}drawAll()}
+let saved=null;try{saved=localStorage.getItem('ngt')}catch(e){}
+$('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+/* data */
+const jobs=[
+ {n:'Student records database',mode:'Full',sch:'Daily 02:00',size:'184 GB',p:100,st:'ok',last:'Today 02:14'},
+ {n:'Learning management content',mode:'Incremental',sch:'Every 6 hours',size:'36 GB',p:100,st:'ok',last:'Today 06:00'},
+ {n:'Staff mailboxes',mode:'Incremental',sch:'Daily 01:00',size:'92 GB',p:100,st:'ok',last:'Today 01:22'},
+ {n:'Library catalogue',mode:'Full',sch:'Sundays 03:00',size:'41 GB',p:100,st:'ok',last:'Sunday 03:09'},
+ {n:'Research datasets',mode:'Full',sch:'Saturdays 23:00',size:'2.4 TB',p:62,st:'fail',last:'Saturday 23:00'},
+ {n:'Finance ERP',mode:'Full',sch:'Daily 00:30',size:'67 GB',p:100,st:'ok',last:'Today 00:51'},
+ {n:'Identity directory',mode:'Incremental',sch:'Hourly',size:'1.2 GB',p:100,st:'ok',last:'Today 07:00'}];
+const services=[
+ ['Student portal','portal.northgate.edu',99.98,42,0],['Learning management system','lms.northgate.edu',99.94,88,0],
+ ['Email and calendar','mail.northgate.edu',99.99,31,0],['Library system','library.northgate.edu',99.71,214,1],
+ ['Research compute cluster','hpc.northgate.edu',99.90,12,0],['Exam registration','exams.northgate.edu',99.96,67,0],
+ ['Campus Wi-Fi authentication','radius.northgate.edu',99.99,9,0],['Finance ERP','erp.northgate.edu',98.82,340,1],
+ ['VPN gateway','vpn.northgate.edu',99.95,54,0],['Public website','www.northgate.edu',100,38,0],
+ ['Alumni portal','alumni.northgate.edu',94.10,0,2]].map(a=>({n:a[0],h:a[1],up:a[2],ms:a[3],s:a[4],ago:Math.floor(rnd(1,28))}));
+const alerts=[
+ {id:1,sev:'Critical',t:'Research datasets backup failed',d:'Tape library timed out after three retries at 62% on bak-res-02.',src:'bak-res-02',when:'6 hours ago'},
+ {id:2,sev:'Critical',t:'Replication lag on finance database',d:'db-fin-02 is 14 minutes behind its primary and still falling behind.',src:'db-fin-02',when:'38 minutes ago'},
+ {id:3,sev:'Warning',t:'Memory above 78% on library media storage',d:'fs-04 has been above the threshold for 15 minutes.',src:'fs-04',when:'9 minutes ago'},
+ {id:4,sev:'Warning',t:'Certificate expires in 12 days',d:'The TLS certificate for lms.northgate.edu needs renewal.',src:'lms-web-01',when:'3 hours ago'},
+ {id:5,sev:'Info',t:'Nightly backup window finished',d:'Six of seven jobs completed. 388 GB transferred.',src:'bak-core-01',when:'5 hours ago'},
+ {id:6,sev:'Info',t:'Patch set staged for Sunday maintenance',d:'Kernel updates are queued for 11 servers. No action needed.',src:'patch-mgr',when:'Yesterday'}].map(a=>({...a,ack:false}));
+const feedItems=[['06:58','Identity directory backup completed (1.2 GB).'],['06:41','fs-04 memory warning raised.'],['06:12','Karim Adeyemi acknowledged the LMS certificate warning.'],['05:30','Library system latency exceeded 200 ms.'],['02:14','Student records database backup completed (184 GB).'],['01:22','Staff mailboxes backup completed (92 GB).']];
+const vols=[['Research datasets',212],['Student records',74],['Staff mailboxes',58],['Learning content',36],['Finance ERP',28]];
+const hist=[['Staff mailboxes','Last Friday 01:00','Isolated sandbox','8 days ago'],['Learning management content','Yesterday 18:00','Restore in place','3 weeks ago'],['Library catalogue','Sunday 03:00','Isolated sandbox','2 months ago']];
+
+/* nav */
+const titles={dashboard:'Dashboard',monitoring:'Monitoring',backups:'Backups',recovery:'Recovery',alerts:'Alerts',settings:'Settings'};
+function go(p){if(!titles[p])p='dashboard';$$('.page').forEach(s=>s.hidden=s.dataset.page!==p);$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===p));$('#title').textContent=titles[p];$('#side').classList.remove('open');try{history.replaceState(null,'','#'+p)}catch(e){}if(p==='dashboard')drawAll();scrollTo(0,0)}
+$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.go));
+$('#menu').onclick=()=>$('#side').classList.toggle('open');
+
+/* clock */
+setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString([],{hour12:false});services.forEach(s=>{if(++s.ago>30){s.ago=0;if(s.s<2)s.ms=Math.max(5,Math.round(s.ms*rnd(.9,1.1)))}});if(!$('[data-page=monitoring]').hidden)renderSvc()},1000);
+
+/* charts */
+const cfg={cpu:{max:100,u:'%',lo:20,hi:75},mem:{max:100,u:'%',lo:45,hi:82},net:{max:1000,u:' Mbps',lo:180,hi:820}};
+const ser={};Object.keys(cfg).forEach(k=>{let v=rnd(cfg[k].lo,cfg[k].hi);ser[k]=Array.from({length:24},()=>v=clamp(v+rnd(-.12,.12)*cfg[k].max,cfg[k].lo*.8,cfg[k].hi))});
+function draw(k){
+ const c=$('#c-'+k);if(!c.clientWidth)return;const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;
+ const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);const cs=getComputedStyle(document.documentElement),ink=cs.getPropertyValue('--ink').trim(),ln=cs.getPropertyValue('--line').trim(),mu=cs.getPropertyValue('--mute').trim();
+ const L=38,B=20,T=6,H=h-B-T,n=24,bw=(w-L)/n,m=cfg[k].max;x.font='11px "Space Grotesk",Arial,sans-serif';x.textBaseline='middle';
+ [0,.5,1].forEach(f=>{const y=T+H*(1-f);x.strokeStyle=ln;x.setLineDash([3,4]);x.beginPath();x.moveTo(L,y);x.lineTo(w,y);x.stroke();x.setLineDash([]);x.fillStyle=mu;x.textAlign='left';x.fillText(Math.round(m*f),0,y)});
+ ser[k].forEach((v,i)=>{const bh=v/m*H;x.globalAlpha=i===n-1?1:.28;x.fillStyle=ink;x.fillRect(L+i*bw+bw*.19,T+H-bh,bw*.62,bh)});x.globalAlpha=1;x.fillStyle=mu;x.textBaseline='alphabetic';x.textAlign='left';x.fillText('96 s ago',L,h-4);x.textAlign='right';x.fillText('now',w,h-4)}
+function drawAll(){Object.keys(cfg).forEach(draw)}
+function readouts(){Object.keys(cfg).forEach(k=>$('#v'+k).textContent=Math.round(ser[k][23])+cfg[k].u)}
+function tick(){Object.keys(cfg).forEach(k=>{const s=ser[k],c=cfg[k];s.push(clamp(s[23]+rnd(-.14,.14)*c.max,c.lo*.8,c.hi));s.shift()});readouts();drawAll();if(Math.random()<.3)addAct(['Library system health check passed.','Wi-Fi authentication peak: 4,180 devices.','Snapshot verified on node-db-03.','Portal login rate normal.','VPN sessions: 612 active.'][Math.floor(Math.random()*5)])}
+setInterval(tick,4000);addEventListener('resize',drawAll);
+
+/* dashboard bits */
+function addAct(t){feedItems.unshift([hhmm(),t]);if(feedItems.length>8)feedItems.pop();renderFeed()}
+function renderFeed(){$('#feed').innerHTML=feedItems.slice(0,7).map(f=>`<li><time>${f[0]}</time><span>${f[1]}</span></li>`).join('')}
+function renderVols(){const mx=212;$('#vols').innerHTML=vols.map(v=>`<div class="vol"><div><span>${v[0]}</span><span>${v[1]} TB</span></div><div class="bar"><i style="width:${v[1]/mx*100}%"></i></div></div>`).join('')}
+function counts(){const n=alerts.filter(a=>!a.ack).length,c=alerts.filter(a=>!a.ack&&a.sev==='Critical').length;$('#sAlerts').textContent=n;$('#sAlertsSub').textContent=c+' critical';const nv=$('#navAlerts');nv.textContent=n;nv.hidden=!n;
+ const dn=services.filter(s=>s.s===2).length,dg=services.filter(s=>s.s===1).length;$('#hero').textContent=dn?`${dn} service is down and ${dg} are slower than usual.`:`Every service is up. ${dg} are slower than usual.`;
+ $('#monSum').textContent=`${services.length-dg-dn} operational, ${dg} degraded, ${dn} down`}
+
+/* monitoring */
+function renderSvc(){const lab=['Operational','Degraded','Down'],cl=['','warn','crit'];$('#svc').innerHTML=services.map(s=>`<tr><td>${s.n}</td><td>${s.h}</td><td>${bd(lab[s.s],cl[s.s])}</td><td>${s.up.toFixed(2)}%</td><td>${s.s===2?'No response':s.ms+' ms'}</td><td>${s.ago} s ago</td></tr>`).join('')}
+
+/* backups */
+function renderJobs(){const r={ok:['Success',''],fail:['Failed','crit'],run:['Running','run']};$('#jobs').innerHTML=jobs.map(j=>`<tr><td>${j.n}</td><td>${j.mode}</td><td>${j.sch}</td><td>${j.size}</td><td><div class="pg"><div class="bar"><i style="width:${j.p}%"></i></div><span>${Math.round(j.p)}%</span></div></td><td>${j.last}</td><td>${bd(...r[j.st])}</td></tr>`).join('')}
+let busy=false;
+$('#runBk').onclick=()=>{if(busy)return;busy=true;const b=$('#runBk');b.disabled=true;b.textContent='Backup running';jobs.forEach(j=>{j.p=0;j.st='run';j.sp=rnd(1.2,4.5)});addAct('Manual backup started for all jobs.');renderJobs();
+ const iv=setInterval(()=>{let left=0;jobs.forEach(j=>{if(j.st!=='run')return;j.p=Math.min(100,j.p+j.sp*rnd(.5,1.4));if(j.p>=100){j.st='ok';j.last='Just now';addAct(j.n+' backup completed ('+j.size+').')}else left++});renderJobs();
+ if(!left){clearInterval(iv);busy=false;b.disabled=false;b.textContent='Run backup now';$('#sLast').textContent=hhmm();$('#sLastSub').textContent='All jobs, just now';const a=alerts.find(x=>x.id===1);if(a)a.ack=true;counts();renderAlerts();toast('Backup finished. All 7 jobs succeeded.')}},200)};
+
+/* recovery */
+const pts=['Today 02:00','Yesterday 02:00','2 days ago 02:00','Last Sunday 02:00','3 weeks ago 02:00'];
+$('#rs').innerHTML=jobs.map(j=>`<option>${j.n}</option>`).join('');
+function fillPts(){const j=jobs.find(x=>x.n===$('#rs').value);$('#rp').innerHTML=pts.map((p,i)=>`<option>${p} (${i%4===3?'Full':j.mode}, ${j.size})</option>`).join('')}
+$('#rs').onchange=fillPts;fillPts();
+function renderHist(){$('#rhist').innerHTML=hist.map(h=>`<tr><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td></tr>`).join('')}
+let rbusy=false;
+$('#rgo').onclick=()=>{if(rbusy)return;const place=$('input[name=mode]:checked').value==='place';$('#dmsg').textContent=`Restore ${$('#rs').value} to ${$('#rp').value.split(' (')[0].toLowerCase()}. `+(place?'Live data will be overwritten and the service restarts briefly.':'The restore goes to an isolated sandbox. Live data stays as it is.');$('#dlg').showModal()};
+$('#dno').onclick=()=>$('#dlg').close();
+$('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')e.target.close()});
+$('#dyes').onclick=()=>{$('#dlg').close();const sys=$('#rs').value,pt=$('#rp').value.split(' (')[0],place=$('input[name=mode]:checked').value==='place';
+ const st=['Check the snapshot','Pause dependent services','Restore data','Verify integrity','Bring the service back'];rbusy=true;$('#rgo').disabled=true;$('#rprog').hidden=false;$('#rtitle').textContent='Restoring '+sys;
+ $('#rsteps').innerHTML=st.map(s=>`<li><i>-</i>${s}</li>`).join('');let i=0,p=0;addAct('Recovery started for '+sys+'.');
+ const iv=setInterval(()=>{p+=rnd(.8,2.2);const idx=Math.min(4,Math.floor(p/20));$$('#rsteps li').forEach((l,k)=>{l.className=k<idx?'done':k===idx&&p<100?'now':'';l.firstChild.textContent=k<idx?'\u2713':k===idx&&p<100?'\u2026':'-'});
+ $('#rbar').style.width=Math.min(p,100)+'%';$('#rpct').textContent=Math.round(Math.min(p,100))+'%';
+ if(p>=100){clearInterval(iv);$$('#rsteps li').forEach(l=>{l.className='done';l.firstChild.textContent='\u2713'});rbusy=false;$('#rgo').disabled=false;$('#rtitle').textContent='Restored '+sys;hist.unshift([sys,pt,place?'Restore in place':'Isolated sandbox','Just now']);renderHist();addAct('Recovery completed for '+sys+'.');toast('Recovery complete')}},140)};
+
+/* alerts */
+let filt='All';
+function renderAlerts(){const cl={Critical:'crit',Warning:'warn',Info:''};
+ $('#tabs').innerHTML=['All','Critical','Warning','Info'].map(f=>`<button class="${f===filt?'on':''}" data-f="${f}">${f} (${alerts.filter(a=>f==='All'||a.sev===f).length})</button>`).join('');
+ $$('#tabs button').forEach(b=>b.onclick=()=>{filt=b.dataset.f;renderAlerts()});
+ const l=alerts.filter(a=>filt==='All'||a.sev===filt);
+ $('#alerts').innerHTML=l.length?l.map(a=>`<div class="alert ${a.ack?'ack':''}"><div>${bd(a.sev,cl[a.sev])}</div><div><h3>${a.t}</h3><p>${a.d}</p><p>${a.src}, ${a.when}</p></div><button class="btn sm" data-id="${a.id}">${a.ack?'Reopen':'Acknowledge'}</button></div>`).join(''):'<div class="alert"><p>No alerts in this category.</p></div>';
+ $$('#alerts button').forEach(b=>b.onclick=()=>{const a=alerts.find(x=>x.id==b.dataset.id);a.ack=!a.ack;counts();renderAlerts()})}
+
+/* settings */
+$('#save').onclick=()=>toast('Settings saved');
+
+/* init */
+setTheme(saved||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+renderFeed();renderVols();renderSvc();renderJobs();renderHist();renderAlerts();counts();readouts();
+go(location.hash.slice(1));
+setTimeout(()=>{$('#loader').classList.add('hide');drawAll()},1500);
+</script>
+</body>
+</html>
